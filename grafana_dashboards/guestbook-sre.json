@@ -1,0 +1,163 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": [
+    "guestbook",
+    "sre",
+    "apache",
+    "redis"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "title": "Guestbook SRE Overview",
+  "version": 2,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Apache Up",
+      "type": "stat",
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "apache_up{job=\"apache-exporter\"}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Hits/sec",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 6,
+        "w": 9,
+        "x": 6,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "(sum(increase({__name__=~\"apache_accesses_total|apache_accesses|apache_requests_total\",job=\"apache-exporter\"}[1m])) / 60) or vector(0)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Avg Response Size (bytes/req)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 6,
+        "w": 9,
+        "x": 15,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "(1024 * sum(rate(apache_sent_kilobytes_total{job=\"apache-exporter\"}[5m])) / clamp_min(sum(rate({__name__=~\"apache_accesses_total|apache_accesses|apache_requests_total\",job=\"apache-exporter\"}[5m])), 1)) or vector(0)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Redis Connected Clients",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(redis_connected_clients{job=~\"redis-.*-exporter\"})",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Redis Ops/sec",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(redis_commands_processed_total{job=~\"redis-.*-exporter\"}[5m]))",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Redis Memory Used",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 6
+      },
+      "targets": [
+        {
+          "expr": "sum(redis_memory_used_bytes{job=~\"redis-.*-exporter\"})",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Apache Worker Saturation",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 12
+      },
+      "targets": [
+        {
+          "expr": "apache_workers{state=\"busy\"} / ignoring(state) group_left sum without(state) (apache_workers)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Number of Requests",
+      "type": "stat",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 12
+      },
+      "targets": [
+        {
+          "expr": "sum(increase({__name__=~\"apache_accesses_total|apache_accesses|apache_requests_total\",job=\"apache-exporter\"}[$__range])) or vector(0)",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}
