@@ -1,0 +1,55 @@
+---
+config:
+  kubernetes:context: minikube
+  k8s-guestbook:useLoadBalancer: false
+  k8s-guestbook:images:
+    frontend: pulumi/guestbook-php-redis
+    redisLeader: redis
+    redisReplica: pulumi/guestbook-redis-replica
+    apacheExporter: lusotycoon/apache-exporter:v1.0.8
+    redisExporter: oliver006/redis_exporter:v1.62.0
+    prometheus: prom/prometheus:v2.54.1
+    grafana: grafana/grafana:11.1.0
+
+  k8s-guestbook:monitoring:
+    namespace: monitoring
+    apacheExporter:
+      metricsServiceName: frontend-apache-metrics
+      metricsPort: 9117
+      scrapeUri: http://127.0.0.1/server-status?auto
+    redisExporters:
+      leaderName: redis-leader-exporter
+      replicaName: redis-replica-exporter
+      metricsPort: 9121
+    extraExporters: []
+    prometheus:
+      name: prometheus
+      port: 9090
+      scrapeInterval: 5s
+      evaluationInterval: 15s
+      scrapeJobs:
+        - job_name: prometheus
+          static_configs:
+            - targets:
+                - "localhost:{prometheus_port}"
+        - job_name: apache-exporter
+          static_configs:
+            - targets:
+                - "{apache_metrics_service}.{frontend_namespace}.svc.cluster.local:{apache_metrics_port}"
+        - job_name: redis-leader-exporter
+          static_configs:
+            - targets:
+                - "{redis_leader_exporter_name}.{monitoring_namespace}.svc.cluster.local:{redis_exporter_metrics_port}"
+        - job_name: redis-replica-exporter
+          static_configs:
+            - targets:
+                - "{redis_replica_exporter_name}.{monitoring_namespace}.svc.cluster.local:{redis_exporter_metrics_port}"
+    grafana:
+      name: grafana
+      port: 3000
+      serviceType: NodePort
+      nodePort: 32000
+      adminUser: admin
+      adminPasswordLength: 24
+      dashboardFiles:
+        - grafana_dashboards/guestbook-sre.json
